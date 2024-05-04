@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33122.133
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ContentManagementService.API", "ContentManagementService\ContentManagementService.API.csproj", "{3749F623-E632-446E-9D8A-5E08272BC44E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ContentManagementService.API", "ContentManagementService.API\ContentManagementService.API.csproj", "{3749F623-E632-446E-9D8A-5E08272BC44E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ContentManagementService.Data", "ContentManagementService.Data\ContentManagementService.Data.csproj", "{D6276731-C264-4A06-92F9-373A3CF444F0}"
 EndProject
