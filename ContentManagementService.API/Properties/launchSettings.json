@@ -1,6 +1,6 @@
 {
   "profiles": {
-    "ContentManagementService": {
+    "ContentManagementService.API": {
       "commandName": "Project",
       "launchBrowser": true,
       "launchUrl": "swagger",
