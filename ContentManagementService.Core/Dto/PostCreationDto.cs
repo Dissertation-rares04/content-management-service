@@ -8,7 +8,7 @@ namespace ContentManagementService.Core.Dto
 
         public string Content { get; set; }
 
-        public List<string> Tags { get; set; }
+        public string Category { get; set; }
 
         public List<Media> Medias { get; set; }
     }

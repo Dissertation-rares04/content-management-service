@@ -2,6 +2,7 @@
 using ContentManagementService.Core.Model;
 using ContentManagementService.Data.Interface;
 using Microsoft.Extensions.Options;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace ContentManagementService.Data.Implementation
@@ -59,6 +60,17 @@ namespace ContentManagementService.Data.Implementation
             var result = await _postCollection.DeleteOneAsync(filter);
 
             return result.DeletedCount > 0;
+        }
+
+        public async Task<bool> LikePost(string postId, Like like)
+        {
+            var filter = Builders<Post>.Filter.Eq(x => x.Id, postId);
+
+            var update = Builders<Post>.Update.Push("Likes", like);
+
+            var result = await _postCollection.UpdateOneAsync(filter, update);
+
+            return result.ModifiedCount > 0;
         }
     }
 }

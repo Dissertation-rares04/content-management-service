@@ -11,9 +11,12 @@ namespace ContentManagementService.Business.Implementation
     {
         private readonly IPostServiceDataAccess _postServiceDataAccess;
 
-        public PostService(IPostServiceDataAccess postServiceDataAccess, IUserResolver userResolver) : base(userResolver)
+        private readonly IKafkaProducer _kafkaProducer;
+
+        public PostService(IPostServiceDataAccess postServiceDataAccess, IKafkaProducer kafkaProducer, IUserResolver userResolver) : base(userResolver)
         {
             _postServiceDataAccess = postServiceDataAccess;
+            _kafkaProducer = kafkaProducer;
         }
 
         public async Task<List<Post>> GetUserPosts()
@@ -30,9 +33,8 @@ namespace ContentManagementService.Business.Implementation
                 UserId = _userResolver.UserId,
                 Title = postCreationDto.Title,
                 Content = postCreationDto.Content,
-                Tags = postCreationDto.Tags,
-                Medias = postCreationDto.Medias,
-                Likes = new List<Like>()
+                Category = postCreationDto.Category,
+                Medias = postCreationDto.Medias
             };
 
             await _postServiceDataAccess.CreatePost(post);
@@ -43,7 +45,6 @@ namespace ContentManagementService.Business.Implementation
             var post = await _postServiceDataAccess.FindPostById(postUpdationDto.Id);
             post.Title = postUpdationDto.Title;
             post.Content = postUpdationDto.Content;
-            post.Tags = postUpdationDto.Tags;
             post.Medias = postUpdationDto.Medias;
 
             var result = await _postServiceDataAccess.UpdatePost(post);
@@ -60,6 +61,22 @@ namespace ContentManagementService.Business.Implementation
             }
 
             var result = await _postServiceDataAccess.DeletePost(postDeletionDto.Id);
+
+            return result;
+        }
+
+        public async Task<bool> LikePost(string postId)
+        {
+            var like = new Like()
+            {
+                UserId = _userResolver.UserId,
+                CreatedAt = DateTime.UtcNow,
+            };
+
+            var result = await _postServiceDataAccess.LikePost(postId, like);
+
+            var post = await _postServiceDataAccess.FindPostById(postId);
+            await _kafkaProducer.ProduceLikeEvent(post, like);
 
             return result;
         }

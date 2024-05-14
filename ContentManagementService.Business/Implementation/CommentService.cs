@@ -1,20 +1,23 @@
 ﻿using ContentManagementService.Business.Interface;
-using ContentManagementService.Core.CustomException;
 using ContentManagementService.Core;
+using ContentManagementService.Core.CustomException;
 using ContentManagementService.Core.Dto;
+using ContentManagementService.Core.Enum;
 using ContentManagementService.Core.Model;
-using ContentManagementService.Data.Implementation;
 using ContentManagementService.Data.Interface;
+using Newtonsoft.Json;
 
 namespace ContentManagementService.Business.Implementation
 {
     public class CommentService : BaseService, ICommentService
     {
         private readonly ICommentServiceDataAccess _commentServiceDataAccess;
+        private readonly IRabbitMQProducer _rabbitMQProducer;
 
-        public CommentService(ICommentServiceDataAccess commentServiceDataAccess, IUserResolver userResolver) : base(userResolver)
+        public CommentService(ICommentServiceDataAccess commentServiceDataAccess, IRabbitMQProducer rabbitMQProducer, IUserResolver userResolver) : base(userResolver)
         {
             _commentServiceDataAccess = commentServiceDataAccess;
+            _rabbitMQProducer = rabbitMQProducer;
         }
 
         public async Task<List<Comment>> GetUserComments()
@@ -26,14 +29,16 @@ namespace ContentManagementService.Business.Implementation
 
         public async Task CreateComment(CommentCreationDto commentCreationDto)
         {
-            var Comment = new Comment()
+            var comment = new Comment()
             {
                 UserId = _userResolver.UserId,
-                Content = commentCreationDto.Content,
-                Likes = new List<Like>()
+                PostId = commentCreationDto.PostId,
+                Content = commentCreationDto.Content
             };
 
-            await _commentServiceDataAccess.CreateComment(Comment);
+            await _commentServiceDataAccess.CreateComment(comment);
+
+            _rabbitMQProducer.SendNotificationMessage(new Message { ActionType = ActionType.COMMENT_CREATED, Value = JsonConvert.SerializeObject(comment) });
         }
 
         public async Task<bool> UpdateComment(CommentUpdationDto commentUpdationDto)
