@@ -9,7 +9,6 @@ namespace ContentManagementService.Core.Model
         [BsonRepresentation(BsonType.ObjectId)]
         public string Id { get; set; }
 
-        [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public string PostId { get; set; }
 
@@ -17,6 +16,6 @@ namespace ContentManagementService.Core.Model
 
         public string Content { get; set; }
 
-        public List<Like> Likes { get; set; }
+        public List<Like> Likes { get; set; } = new List<Like>();
     }
 }

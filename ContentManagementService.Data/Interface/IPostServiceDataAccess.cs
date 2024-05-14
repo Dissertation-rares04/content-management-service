@@ -9,5 +9,6 @@ namespace ContentManagementService.Data.Interface
         Task CreatePost(Post post);
         Task<bool> UpdatePost(Post post);
         Task<bool> DeletePost(string postId);
+        Task<bool> LikePost(string postId, Like like);
     }
 }

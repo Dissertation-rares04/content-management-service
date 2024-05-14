@@ -13,10 +13,12 @@ namespace ContentManagementService.Core.Model
 
         public string Title { get; set; }
 
+        public string Category { get; set; }
+
         public string Content { get; set; }
 
-        public List<string> Tags { get; set; }
-        public List<Media> Medias { get; set; }
-        public List<Like> Likes { get; set; }
+        public List<Media> Medias { get; set; } = new List<Media>();
+
+        public List<Like> Likes { get; set; } = new List<Like>();
     }
 }

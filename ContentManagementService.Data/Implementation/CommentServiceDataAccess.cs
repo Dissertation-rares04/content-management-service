@@ -8,18 +8,18 @@ namespace ContentManagementService.Data.Implementation
 {
     public class CommentServiceDataAccess : BaseServiceDataAccess, ICommentServiceDataAccess
     {
-        protected readonly IMongoCollection<Comment> _CommentCollection;
+        protected readonly IMongoCollection<Comment> _commentCollection;
 
         public CommentServiceDataAccess(IOptions<MongoDbSettings> mongoDbSettings) : base(mongoDbSettings)
         {
-            _CommentCollection = _mongoDatabase.GetCollection<Comment>(mongoDbSettings.Value.CommentCollectionName);
+            _commentCollection = _mongoDatabase.GetCollection<Comment>(mongoDbSettings.Value.CommentCollectionName);
         }
 
         public async Task<Comment> FindCommentById(string commentId)
         {
             var filter = Builders<Comment>.Filter.Eq(x => x.Id, commentId);
 
-            var result = await _CommentCollection.FindAsync<Comment>(filter);
+            var result = await _commentCollection.FindAsync<Comment>(filter);
 
             return result.SingleOrDefault();
         }
@@ -28,7 +28,7 @@ namespace ContentManagementService.Data.Implementation
         {
             var filter = Builders<Comment>.Filter.Eq(x => x.UserId, userId);
 
-            var result = await _CommentCollection.FindAsync<Comment>(filter);
+            var result = await _commentCollection.FindAsync<Comment>(filter);
 
             return result.ToList();
         }
@@ -38,7 +38,7 @@ namespace ContentManagementService.Data.Implementation
             comment.CreatedAt = DateTime.Now;
             comment.UpdatedAt = null;
 
-            await _CommentCollection.InsertOneAsync(comment);
+            await _commentCollection.InsertOneAsync(comment);
         }
 
         public async Task<bool> UpdateComment(Comment comment)
@@ -47,7 +47,7 @@ namespace ContentManagementService.Data.Implementation
 
             var filter = Builders<Comment>.Filter.Eq(x => x.Id, comment.Id);
 
-            var result = await _CommentCollection.ReplaceOneAsync(filter, comment);
+            var result = await _commentCollection.ReplaceOneAsync(filter, comment);
 
             return result.ModifiedCount > 0;
         }
@@ -56,7 +56,7 @@ namespace ContentManagementService.Data.Implementation
         {
             var filter = Builders<Comment>.Filter.Eq(x => x.Id, commentId);
 
-            var result = await _CommentCollection.DeleteOneAsync(filter);
+            var result = await _commentCollection.DeleteOneAsync(filter);
 
             return result.DeletedCount > 0;
         }

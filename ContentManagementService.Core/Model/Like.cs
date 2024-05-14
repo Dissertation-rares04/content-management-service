@@ -1,13 +1,9 @@
-﻿using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
-
-namespace ContentManagementService.Core.Model
+﻿namespace ContentManagementService.Core.Model
 {
     public class Like
     {
-        [BsonRepresentation(BsonType.ObjectId)]
-        public string UserId { get; set; } // User ID of the user who liked the post/comment
+        public string UserId { get; set; }
 
-        public DateTime CreatedAt { get; set; } // Timestamp of the like
+        public DateTime CreatedAt { get; set; }
     }
 }

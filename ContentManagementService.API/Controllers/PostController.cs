@@ -21,9 +21,9 @@ namespace ContentManagementService.API.Controllers
         {
             try
             {
-                await _postService.GetUserPosts();
+                var result = await _postService.GetUserPosts();
 
-                return Ok();
+                return Ok(result);
             }
             catch (Exception ex)
             {
@@ -80,5 +80,22 @@ namespace ContentManagementService.API.Controllers
                 return StatusCode(500, $"An error occurred: {ex.Message}");
             }
         }
+
+        [HttpPost("like")]
+        public async Task<IActionResult> LikePost([FromQuery] string postId)
+        {
+            try
+            {
+                var result = await _postService.LikePost(postId);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                // Handle exceptions
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
+
     }
 }
