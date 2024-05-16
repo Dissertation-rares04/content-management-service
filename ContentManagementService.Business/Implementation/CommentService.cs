@@ -12,11 +12,13 @@ namespace ContentManagementService.Business.Implementation
     public class CommentService : BaseService, ICommentService
     {
         private readonly ICommentServiceDataAccess _commentServiceDataAccess;
+        private readonly IPostServiceDataAccess _postServiceDataAccess;
         private readonly IRabbitMQProducer _rabbitMQProducer;
 
-        public CommentService(ICommentServiceDataAccess commentServiceDataAccess, IRabbitMQProducer rabbitMQProducer, IUserResolver userResolver) : base(userResolver)
+        public CommentService(ICommentServiceDataAccess commentServiceDataAccess, IPostServiceDataAccess postServiceDataAccess, IRabbitMQProducer rabbitMQProducer, IUserResolver userResolver) : base(userResolver)
         {
             _commentServiceDataAccess = commentServiceDataAccess;
+            _postServiceDataAccess = postServiceDataAccess;
             _rabbitMQProducer = rabbitMQProducer;
         }
 
@@ -38,7 +40,15 @@ namespace ContentManagementService.Business.Implementation
 
             await _commentServiceDataAccess.CreateComment(comment);
 
-            _rabbitMQProducer.SendNotificationMessage(new Message { ActionType = ActionType.COMMENT_CREATED, Value = JsonConvert.SerializeObject(comment) });
+            var post = await _postServiceDataAccess.FindPostById(commentCreationDto.PostId);
+            var message = new
+            {
+                PostAuthorUserId = post.UserId,
+                CommentAuthorUserId = _userResolver.UserId,
+                PostId = post.Id,
+                CommentContent = commentCreationDto.Content
+            };
+            _rabbitMQProducer.SendNotificationMessage(new Message { ActionType = ActionType.COMMENT_CREATED, Value = JsonConvert.SerializeObject(message) });
         }
 
         public async Task<bool> UpdateComment(CommentUpdationDto commentUpdationDto)

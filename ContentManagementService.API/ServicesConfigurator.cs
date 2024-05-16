@@ -24,6 +24,7 @@ namespace ContentManagementService.API
 
         private static void ConfigureAppSettings(this IServiceCollection services, IConfiguration configuration)
         {
+            services.Configure<RabbitMQSettings>(configuration.GetSection("RabbitMQ"));
             services.Configure<Auth0Settings>(configuration.GetSection("Auth0"));
             services.Configure<MongoDbSettings>(configuration.GetSection("MongoDb"));
             services.Configure<KafkaSettings>(configuration.GetSection("Kafka"));
