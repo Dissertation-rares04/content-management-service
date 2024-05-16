@@ -1,4 +1,7 @@
 ﻿using ContentManagementService.Business.Interface;
+using ContentManagementService.Core.AppSettings;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 using System.Text;
@@ -10,18 +13,24 @@ namespace ContentManagementService.Business.Implementation
         private IConnection? _connection;
         private IModel? _channel;
 
-        public RabbitMQProducer()
+        private readonly ILogger<RabbitMQProducer> _logger;
+
+        public RabbitMQProducer(IOptions<RabbitMQSettings> rabbitMQSettings, ILogger<RabbitMQProducer> logger)
         {
-            InitRabbitMQ();
+            _logger = logger;
+
+            InitRabbitMQ(rabbitMQSettings);
         }
 
-        private void InitRabbitMQ()
+        private void InitRabbitMQ(IOptions<RabbitMQSettings> rabbitMQSettings)
         {
+            _logger.LogInformation($"Setting up rabbitmq connection on {rabbitMQSettings.Value.Hostname}:{rabbitMQSettings.Value.Port}");
+
             //Here we specify the Rabbit MQ Server. we use rabbitmq docker image and use it
             var factory = new ConnectionFactory
             {
-                HostName = "localhost",
-                Port = 5672
+                HostName = rabbitMQSettings.Value.Hostname,
+                Port = rabbitMQSettings.Value.Port
             };
 
             //Create the RabbitMQ connection using connection factory details as i mentioned above
@@ -42,6 +51,8 @@ namespace ContentManagementService.Business.Implementation
 
             //put the data on to the product queue
             _channel.BasicPublish(exchange: string.Empty, routingKey: "notification_tasks", body: body);
+
+            _logger.LogInformation($"Produced {json}");
         }
 
         public void Dispose()
