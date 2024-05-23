@@ -11,6 +11,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddCors(options =>
 {
+    options.AddPolicy("AllowedHosts", builder =>
+    {
+        builder.WithOrigins("*")
+           .AllowAnyMethod()
+           .AllowAnyHeader();
+    });
+
     options.AddDefaultPolicy(policy =>
     {
         policy.WithOrigins(
@@ -57,6 +64,10 @@ builder.Host.ConfigureServices(services =>
         {
             policy.Requirements.Add(new RbacRequirement("delete:post"));
         });
+        options.AddPolicy("delete:comment", policy =>
+        {
+            policy.Requirements.Add(new RbacRequirement("delete:comment"));
+        });
     });
 
     services.AddSingleton<IAuthorizationHandler, RbacHandler>();
@@ -76,10 +87,10 @@ if (app.Environment.IsDevelopment())
 app.UseErrorHandler();
 app.UseSecureHeaders();
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 app.MapControllers();
-app.UseCors();
+app.UseCors("AllowedHosts");
 
 app.UseAuthentication();
 app.UseAuthorization();

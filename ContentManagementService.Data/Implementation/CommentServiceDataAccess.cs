@@ -33,6 +33,19 @@ namespace ContentManagementService.Data.Implementation
             return result.ToList();
         }
 
+        public async Task<List<Comment>> FindCommentsByPostId(string postId)
+        {
+            var filter = Builders<Comment>.Filter.Eq(x => x.PostId, postId);
+            var sort = Builders<Comment>.Sort.Descending(x => x.CreatedAt);
+
+            var result = await _commentCollection
+                .Find(filter)
+                .Sort(sort)
+                .ToListAsync();
+
+            return result;
+        }
+
         public async Task CreateComment(Comment comment)
         {
             comment.CreatedAt = DateTime.Now;
@@ -59,6 +72,17 @@ namespace ContentManagementService.Data.Implementation
             var result = await _commentCollection.DeleteOneAsync(filter);
 
             return result.DeletedCount > 0;
+        }
+
+        public async Task<bool> SaveInteraction(string commentId, Interaction interaction)
+        {
+            var filter = Builders<Comment>.Filter.Eq(x => x.Id, commentId);
+
+            var update = Builders<Comment>.Update.Push("Interactions", interaction);
+
+            var result = await _commentCollection.UpdateOneAsync(filter, update);
+
+            return result.ModifiedCount > 0;
         }
     }
 }

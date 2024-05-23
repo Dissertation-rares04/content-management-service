@@ -1,19 +1,22 @@
 ﻿using ContentManagementService.Core.AppSettings;
+using ContentManagementService.Core.Dto;
 using ContentManagementService.Core.Model;
 using ContentManagementService.Data.Interface;
 using Microsoft.Extensions.Options;
-using MongoDB.Bson;
 using MongoDB.Driver;
+using Interaction = ContentManagementService.Core.Model.Interaction;
 
 namespace ContentManagementService.Data.Implementation
 {
     public class PostServiceDataAccess : BaseServiceDataAccess, IPostServiceDataAccess
     {
         protected readonly IMongoCollection<Post> _postCollection;
+        protected readonly IMongoCollection<UserRecommendation> _userRecommendationCollection;
 
         public PostServiceDataAccess(IOptions<MongoDbSettings> mongoDbSettings) : base(mongoDbSettings)
         {
             _postCollection = _mongoDatabase.GetCollection<Post>(mongoDbSettings.Value.PostCollectionName);
+            _userRecommendationCollection = _mongoDatabase.GetCollection<UserRecommendation>(mongoDbSettings.Value.UserRecommendationCollectionName);
         }
 
         public async Task<Post> FindPostById(string postId)
@@ -29,9 +32,44 @@ namespace ContentManagementService.Data.Implementation
         {
             var filter = Builders<Post>.Filter.Eq(x => x.UserId, userId);
 
-            var result = await _postCollection.FindAsync<Post>(filter);
+            var sort = Builders<Post>.Sort.Descending(x => x.CreatedAt);
 
-            return result.ToList();
+            var result = await _postCollection
+                .Find(filter)
+                .Sort(sort)
+                .ToListAsync();
+
+            return result;
+        }
+
+        public async Task<List<CategoryPosts>> GetCategoriesPosts(string userId) 
+        {
+            var query = _postCollection.AsQueryable()
+                .Where(x => x.UserId != userId)
+                .OrderByDescending(x => x.CreatedAt)
+                .GroupBy(x => x.Category)
+                .Select(group => new CategoryPosts
+                {
+                    Category = group.Key,
+                    Posts = group.Take(5).ToList()
+                });
+
+            var result = query.ToList();
+
+            return result;
+        }
+
+        public async Task<List<Post>> GetRecommendations(string userId)
+        {
+            var filter = Builders<UserRecommendation>.Filter.Eq(x => x.UserId, userId);
+
+            var result = await _userRecommendationCollection.FindAsync<UserRecommendation>(filter);
+
+            var postsFilter = Builders<Post>.Filter.In(x => x.Id, result.ToEnumerable().Select(x => x.PostId));
+
+            var postsResult = await _postCollection.FindAsync<Post>(postsFilter);
+
+            return postsResult.ToEnumerable().ToList();
         }
 
         public async Task CreatePost(Post post)
@@ -62,11 +100,11 @@ namespace ContentManagementService.Data.Implementation
             return result.DeletedCount > 0;
         }
 
-        public async Task<bool> LikePost(string postId, Like like)
+        public async Task<bool> SaveInteraction(string postId, Interaction interaction)
         {
             var filter = Builders<Post>.Filter.Eq(x => x.Id, postId);
 
-            var update = Builders<Post>.Update.Push("Likes", like);
+            var update = Builders<Post>.Update.Push("Interactions", interaction);
 
             var result = await _postCollection.UpdateOneAsync(filter, update);
 
