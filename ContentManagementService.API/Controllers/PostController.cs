@@ -144,5 +144,21 @@ namespace ContentManagementService.API.Controllers
                 return StatusCode(500, $"An error occurred: {ex.Message}");
             }
         }
+
+        [HttpPost("view")]
+        public async Task<IActionResult> ViewPost([FromQuery] string postId)
+        {
+            try
+            {
+                var result = await _postService.InteractWithPost(postId, Core.Enum.InteractionType.VIEW);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                // Handle exceptions
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
     }
 }

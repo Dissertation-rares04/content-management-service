@@ -31,15 +31,6 @@ namespace ContentManagementService.Business.Implementation
         {
             var result = await _postServiceDataAccess.FindPostById(postId);
 
-            var view = new Interaction()
-            {
-                UserId = _userResolver.UserId,
-                CreatedAt = DateTime.UtcNow,
-                InteractionType = Core.Enum.InteractionType.VIEW
-            };
-
-            await _kafkaProducer.ProduceInteractionEvent(result, view);
-
             return result;
         }
 
