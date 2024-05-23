@@ -16,12 +16,60 @@ namespace ContentManagementService.API.Controllers
             _postService = postService;
         }
 
-        [HttpGet("read/my-posts")]
+        [HttpGet("my-posts")]
         public async Task<IActionResult> GetUserPosts()
         {
             try
             {
                 var result = await _postService.GetUserPosts();
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                // Handle exceptions
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
+
+        [HttpGet("post/{id}")]
+        public async Task<IActionResult> GetPostById([FromRoute] string id)
+        {
+            try
+            {
+                var result = await _postService.GetPostById(id);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                // Handle exceptions
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
+
+        [HttpGet("recommendations")]
+        public async Task<IActionResult> GetRecommendations()
+        {
+            try
+            {
+                var result = await _postService.GetRecommendations();
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                // Handle exceptions
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
+
+        [HttpGet("categories-posts")]
+        public async Task<IActionResult> GetCategoriesPosts()
+        {
+            try
+            {
+                var result = await _postService.GetCategoriesPosts();
 
                 return Ok(result);
             }
@@ -66,11 +114,11 @@ namespace ContentManagementService.API.Controllers
 
         [HttpDelete("delete")]
         [Authorize("delete:post")]
-        public async Task<IActionResult> DeletePost([FromBody] PostDeletionDto postDeletionDto)
+        public async Task<IActionResult> DeletePost([FromBody] string postId)
         {
             try
             {
-                var result = await _postService.DeletePost(postDeletionDto);
+                var result = await _postService.DeletePost(postId);
 
                 return Ok(result);
             }
@@ -86,7 +134,7 @@ namespace ContentManagementService.API.Controllers
         {
             try
             {
-                var result = await _postService.LikePost(postId);
+                var result = await _postService.InteractWithPost(postId, Core.Enum.InteractionType.LIKE);
 
                 return Ok(result);
             }
@@ -96,6 +144,5 @@ namespace ContentManagementService.API.Controllers
                 return StatusCode(500, $"An error occurred: {ex.Message}");
             }
         }
-
     }
 }

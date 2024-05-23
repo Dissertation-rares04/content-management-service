@@ -2,6 +2,7 @@
 using ContentManagementService.Core;
 using ContentManagementService.Core.CustomException;
 using ContentManagementService.Core.Dto;
+using ContentManagementService.Core.Enum;
 using ContentManagementService.Core.Model;
 using ContentManagementService.Data.Interface;
 
@@ -22,6 +23,36 @@ namespace ContentManagementService.Business.Implementation
         public async Task<List<Post>> GetUserPosts()
         {
             var result = await _postServiceDataAccess.FindPostsByUserId(_userResolver.UserId);
+
+            return result;
+        }
+
+        public async Task<Post> GetPostById(string postId)
+        {
+            var result = await _postServiceDataAccess.FindPostById(postId);
+
+            var view = new Interaction()
+            {
+                UserId = _userResolver.UserId,
+                CreatedAt = DateTime.UtcNow,
+                InteractionType = Core.Enum.InteractionType.VIEW
+            };
+
+            await _kafkaProducer.ProduceInteractionEvent(result, view);
+
+            return result;
+        }
+
+        public async Task<List<CategoryPosts>> GetCategoriesPosts()
+        {
+            var result = await _postServiceDataAccess.GetCategoriesPosts(_userResolver.UserId);
+
+            return result;
+        }
+
+        public async Task<List<Post>> GetRecommendations()
+        {
+            var result = await _postServiceDataAccess.GetRecommendations(_userResolver.UserId);
 
             return result;
         }
@@ -51,32 +82,33 @@ namespace ContentManagementService.Business.Implementation
             return result;
         }
 
-        public async Task<bool> DeletePost(PostDeletionDto postDeletionDto)
+        public async Task<bool> DeletePost(string postId)
         {
-            var post = await _postServiceDataAccess.FindPostById(postDeletionDto.Id);
+            var post = await _postServiceDataAccess.FindPostById(postId);
 
             if (post.UserId != _userResolver.UserId)
             {
                 throw new BusinessException(ErrorCodes.CanOnlyDeletePersonalPosts);
             }
 
-            var result = await _postServiceDataAccess.DeletePost(postDeletionDto.Id);
+            var result = await _postServiceDataAccess.DeletePost(postId);
 
             return result;
         }
 
-        public async Task<bool> LikePost(string postId)
+        public async Task<bool> InteractWithPost(string postId, InteractionType interactionType)
         {
-            var like = new Like()
+            var interaction = new Interaction()
             {
                 UserId = _userResolver.UserId,
                 CreatedAt = DateTime.UtcNow,
+                InteractionType = interactionType
             };
 
-            var result = await _postServiceDataAccess.LikePost(postId, like);
+            var result = await _postServiceDataAccess.SaveInteraction(postId, interaction);
 
             var post = await _postServiceDataAccess.FindPostById(postId);
-            await _kafkaProducer.ProduceLikeEvent(post, like);
+            await _kafkaProducer.ProduceInteractionEvent(post, interaction);
 
             return result;
         }

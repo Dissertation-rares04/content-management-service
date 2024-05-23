@@ -16,6 +16,6 @@ namespace ContentManagementService.Core.Model
 
         public string Content { get; set; }
 
-        public List<Like> Likes { get; set; } = new List<Like>();
+        public List<Interaction> Interactions { get; set; } = new List<Interaction>();
     }
 }

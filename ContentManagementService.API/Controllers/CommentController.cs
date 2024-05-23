@@ -16,14 +16,30 @@ namespace ContentManagementService.API.Controllers
             _commentService = commentService;
         }
 
-        [HttpGet("read/my-comments")]
+        [HttpGet("my-comments")]
         public async Task<IActionResult> GetUserComments()
         {
             try
             {
-                await _commentService.GetUserComments();
+                var result = await _commentService.GetUserComments();
 
-                return Ok();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                // Handle exceptions
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
+
+        [HttpGet("comments/{postId}")]
+        public async Task<IActionResult> GetCommentsForPost([FromRoute] string postId)
+        {
+            try
+            {
+                var result = await _commentService.GetCommentsForPost(postId);
+
+                return Ok(result);
             }
             catch (Exception ex)
             {
@@ -66,11 +82,27 @@ namespace ContentManagementService.API.Controllers
 
         [HttpDelete("delete")]
         [Authorize("delete:comment")]
-        public async Task<IActionResult> DeleteComment([FromBody] CommentDeletionDto commentDeletionDto)
+        public async Task<IActionResult> DeleteComment([FromQuery] string commentId)
         {
             try
             {
-                var result = await _commentService.DeleteComment(commentDeletionDto);
+                var result = await _commentService.DeleteComment(commentId);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                // Handle exceptions
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
+
+        [HttpPost("like")]
+        public async Task<IActionResult> LikeComment([FromQuery] string commentId)
+        {
+            try
+            {
+                var result = await _commentService.InteractWithComment(commentId, Core.Enum.InteractionType.LIKE);
 
                 return Ok(result);
             }

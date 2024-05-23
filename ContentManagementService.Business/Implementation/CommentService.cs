@@ -5,7 +5,7 @@ using ContentManagementService.Core.Dto;
 using ContentManagementService.Core.Enum;
 using ContentManagementService.Core.Model;
 using ContentManagementService.Data.Interface;
-using Newtonsoft.Json;
+using Interaction = ContentManagementService.Core.Model.Interaction;
 
 namespace ContentManagementService.Business.Implementation
 {
@@ -13,18 +13,32 @@ namespace ContentManagementService.Business.Implementation
     {
         private readonly ICommentServiceDataAccess _commentServiceDataAccess;
         private readonly IPostServiceDataAccess _postServiceDataAccess;
-        private readonly IRabbitMQProducer _rabbitMQProducer;
+        //private readonly IRabbitMQProducer _rabbitMQProducer;
 
-        public CommentService(ICommentServiceDataAccess commentServiceDataAccess, IPostServiceDataAccess postServiceDataAccess, IRabbitMQProducer rabbitMQProducer, IUserResolver userResolver) : base(userResolver)
+        public CommentService(ICommentServiceDataAccess commentServiceDataAccess, IPostServiceDataAccess postServiceDataAccess, IUserResolver userResolver) : base(userResolver)
         {
             _commentServiceDataAccess = commentServiceDataAccess;
             _postServiceDataAccess = postServiceDataAccess;
-            _rabbitMQProducer = rabbitMQProducer;
+            //_rabbitMQProducer = rabbitMQProducer;
         }
+
+        //public CommentService(ICommentServiceDataAccess commentServiceDataAccess, IPostServiceDataAccess postServiceDataAccess, IRabbitMQProducer rabbitMQProducer, IUserResolver userResolver) : base(userResolver)
+        //{
+        //    _commentServiceDataAccess = commentServiceDataAccess;
+        //    _postServiceDataAccess = postServiceDataAccess;
+        //    _rabbitMQProducer = rabbitMQProducer;
+        //}
 
         public async Task<List<Comment>> GetUserComments()
         {
             var result = await _commentServiceDataAccess.FindCommentsByUserId(_userResolver.UserId);
+
+            return result;
+        }
+
+        public async Task<List<Comment>> GetCommentsForPost(string postId)
+        {
+            var result = await _commentServiceDataAccess.FindCommentsByPostId(postId);
 
             return result;
         }
@@ -35,7 +49,8 @@ namespace ContentManagementService.Business.Implementation
             {
                 UserId = _userResolver.UserId,
                 PostId = commentCreationDto.PostId,
-                Content = commentCreationDto.Content
+                Content = commentCreationDto.Content,
+                Interactions = new List<Interaction>()
             };
 
             await _commentServiceDataAccess.CreateComment(comment);
@@ -48,7 +63,7 @@ namespace ContentManagementService.Business.Implementation
                 PostId = post.Id,
                 CommentContent = commentCreationDto.Content
             };
-            _rabbitMQProducer.SendNotificationMessage(new Message { ActionType = ActionType.COMMENT_CREATED, Value = JsonConvert.SerializeObject(message) });
+            //_rabbitMQProducer.SendNotificationMessage(new Message { ActionType = ActionType.COMMENT_CREATED, Value = JsonConvert.SerializeObject(message) });
         }
 
         public async Task<bool> UpdateComment(CommentUpdationDto commentUpdationDto)
@@ -60,16 +75,30 @@ namespace ContentManagementService.Business.Implementation
             return result;
         }
 
-        public async Task<bool> DeleteComment(CommentDeletionDto commentDeletionDto)
+        public async Task<bool> DeleteComment(string commentId)
         {
-            var comment = await _commentServiceDataAccess.FindCommentById(commentDeletionDto.Id);
+            var comment = await _commentServiceDataAccess.FindCommentById(commentId);
 
             if (comment.UserId != _userResolver.UserId)
             {
                 throw new BusinessException(ErrorCodes.CanOnlyDeletePersonalComments);
             }
 
-            var result = await _commentServiceDataAccess.DeleteComment(commentDeletionDto.Id);
+            var result = await _commentServiceDataAccess.DeleteComment(commentId);
+
+            return result;
+        }
+
+        public async Task<bool> InteractWithComment(string commentId, InteractionType interactionType)
+        {
+            var interaction = new Interaction()
+            {
+                UserId = _userResolver.UserId,
+                CreatedAt = DateTime.UtcNow,
+                InteractionType = interactionType
+            };
+
+            var result = await _commentServiceDataAccess.SaveInteraction(commentId, interaction);
 
             return result;
         }

@@ -19,6 +19,10 @@ namespace ContentManagementService.Core.Model
 
         public List<Media> Medias { get; set; } = new List<Media>();
 
-        public List<Like> Likes { get; set; } = new List<Like>();
+        public List<Interaction> Interactions { get; set; } = new List<Interaction>();
+
+        public List<Interaction> Likes => Interactions.Where(x => x.InteractionType == Enum.InteractionType.LIKE).ToList();
+
+        public List<Interaction> Views => Interactions.Where(x => x.InteractionType == Enum.InteractionType.VIEW).ToList();
     }
 }

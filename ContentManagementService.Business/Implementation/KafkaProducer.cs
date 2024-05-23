@@ -1,9 +1,7 @@
 ﻿using Confluent.Kafka;
 using ContentManagementService.Business.Interface;
 using ContentManagementService.Core.AppSettings;
-using ContentManagementService.Core.Enum;
 using ContentManagementService.Core.Model;
-using ContentManagementService.Data.Interface;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 
@@ -29,20 +27,20 @@ namespace ContentManagementService.Business.Implementation
             _topic = kafkaTopics.Value.UserInteractions;
         }
 
-        public async Task ProduceLikeEvent(Post post, Like like)
+        public async Task ProduceInteractionEvent(Post post, Interaction interaction)
         {
             using var producer = new ProducerBuilder<Null, string>(_producerConfig).Build();
 
-            var likeEvent = new
+            var interactionEvent = new
             {
                 PostId = post.Id,
-                UserId = like.UserId,
+                UserId = interaction.UserId,
                 Category = post.Category,
-                Timestamp = ((DateTimeOffset)like.CreatedAt).ToUnixTimeSeconds(),
-                Action = ActionType.POST_LIKED,
+                Timestamp = ((DateTimeOffset)interaction.CreatedAt).ToUnixTimeSeconds(),
+                Action = interaction.InteractionType,
             };
 
-            var message = JsonConvert.SerializeObject(likeEvent);
+            var message = JsonConvert.SerializeObject(interactionEvent);
 
             var result = await producer.ProduceAsync(_topic, new Message<Null, string> { Value = message }); ;
         }
