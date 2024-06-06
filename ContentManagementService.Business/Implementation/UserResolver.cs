@@ -1,20 +1,16 @@
 ﻿using ContentManagementService.Business.Interface;
 using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 
 namespace ContentManagementService.Business.Implementation
 {
     public class UserResolver : IUserResolver
     {
-        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly string _userId;
 
         public UserResolver(IHttpContextAccessor httpContextAccessor)
         {
-            _httpContextAccessor = httpContextAccessor;
-            _userId = _httpContextAccessor
-                .HttpContext?
-                .Items["UserId"] as string
-                ?? throw new Exception();
+            _userId = (httpContextAccessor.HttpContext.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value) ?? throw new Exception("No sub claim found");
         }
 
         public string UserId => _userId;

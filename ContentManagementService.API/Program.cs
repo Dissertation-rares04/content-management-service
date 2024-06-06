@@ -1,7 +1,6 @@
 using ContentManagementService.API;
 using ContentManagementService.API.Authorization;
 using ContentManagementService.API.Middleware;
-using ContentManagementService.API.Middlewares;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
@@ -94,7 +93,5 @@ app.UseCors("AllowedHosts");
 
 app.UseAuthentication();
 app.UseAuthorization();
-
-app.UseMiddleware<JwtSubClaimMiddleware>();
 
 app.Run();
