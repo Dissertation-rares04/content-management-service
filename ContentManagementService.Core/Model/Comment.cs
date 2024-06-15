@@ -17,5 +17,7 @@ namespace ContentManagementService.Core.Model
         public string Content { get; set; }
 
         public List<Interaction> Interactions { get; set; } = new List<Interaction>();
+
+        public List<Interaction> Likes => Interactions.Where(x => x.InteractionType == Enum.InteractionType.LIKE).ToList();
     }
 }

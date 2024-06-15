@@ -5,6 +5,7 @@ using ContentManagementService.Core.Dto;
 using ContentManagementService.Core.Enum;
 using ContentManagementService.Core.Model;
 using ContentManagementService.Data.Interface;
+using Newtonsoft.Json;
 using Interaction = ContentManagementService.Core.Model.Interaction;
 
 namespace ContentManagementService.Business.Implementation
@@ -13,21 +14,14 @@ namespace ContentManagementService.Business.Implementation
     {
         private readonly ICommentServiceDataAccess _commentServiceDataAccess;
         private readonly IPostServiceDataAccess _postServiceDataAccess;
-        //private readonly IRabbitMQProducer _rabbitMQProducer;
+        private readonly IRabbitMQProducer _rabbitMQProducer;
 
-        public CommentService(ICommentServiceDataAccess commentServiceDataAccess, IPostServiceDataAccess postServiceDataAccess, IUserResolver userResolver) : base(userResolver)
+        public CommentService(ICommentServiceDataAccess commentServiceDataAccess, IPostServiceDataAccess postServiceDataAccess, IRabbitMQProducer rabbitMQProducer, IUserResolver userResolver) : base(userResolver)
         {
             _commentServiceDataAccess = commentServiceDataAccess;
             _postServiceDataAccess = postServiceDataAccess;
-            //_rabbitMQProducer = rabbitMQProducer;
+            _rabbitMQProducer = rabbitMQProducer;
         }
-
-        //public CommentService(ICommentServiceDataAccess commentServiceDataAccess, IPostServiceDataAccess postServiceDataAccess, IRabbitMQProducer rabbitMQProducer, IUserResolver userResolver) : base(userResolver)
-        //{
-        //    _commentServiceDataAccess = commentServiceDataAccess;
-        //    _postServiceDataAccess = postServiceDataAccess;
-        //    _rabbitMQProducer = rabbitMQProducer;
-        //}
 
         public async Task<List<Comment>> GetUserComments()
         {
@@ -63,7 +57,7 @@ namespace ContentManagementService.Business.Implementation
                 PostId = post.Id,
                 CommentContent = commentCreationDto.Content
             };
-            //_rabbitMQProducer.SendNotificationMessage(new Message { ActionType = ActionType.COMMENT_CREATED, Value = JsonConvert.SerializeObject(message) });
+            _rabbitMQProducer.SendNotificationMessage(new Message { ActionType = ActionType.COMMENT_CREATED, Value = JsonConvert.SerializeObject(message) });
         }
 
         public async Task<bool> UpdateComment(CommentUpdationDto commentUpdationDto)
